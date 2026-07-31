@@ -1,0 +1,16 @@
+{
+  "name": "azim-core-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azim Core - тизоми идоракунии хазинаи Vasl Bank (backend + frontend дар як сервер)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
