@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azim Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --navy-deep:#10192b; --navy:#16223b; --navy-light:#1f2f4d; --panel:#1a2740; --line:#2c3c5c;
+    --brass:#c19a5b; --brass-bright:#e0bd7d; --ivory:#f2ede2; --ivory-dim:#b9c0cf;
+    --green:#5fae76; --green-bg:#173425; --red:#d3695f; --red-bg:#3a2018; --amber:#dba24a; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(1200px 600px at 15% -10%, #1c2c4d 0%, transparent 55%),
+      radial-gradient(1000px 500px at 110% 10%, #24345530 0%, transparent 50%), var(--navy-deep);
+    color:var(--ivory); font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:var(--brass);color:var(--navy-deep);}
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{width:100%;max-width:420px;background:linear-gradient(180deg,var(--navy-light),var(--panel));border:1px solid var(--line);border-radius:16px;padding:40px 36px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6);position:relative;overflow:hidden;}
+  .login-card::before{content:"";position:absolute;top:-40%;left:-20%;width:180%;height:180%;background:radial-gradient(circle at 30% 20%, rgba(193,154,91,.10), transparent 55%);pointer-events:none;}
+  .vault-mark{width:52px;height:52px;border-radius:50%;border:2px solid var(--brass);display:flex;align-items:center;justify-content:center;margin-bottom:22px;position:relative;}
+  .vault-mark::after{content:"";width:20px;height:20px;border-radius:50%;border:2px solid var(--brass-bright);}
+  .login-card h1{font-size:26px;color:var(--ivory);margin:0 0 4px;font-weight:600;letter-spacing:.01em;}
+  .login-sub{color:var(--ivory-dim);font-size:13.5px;margin:0 0 28px;letter-spacing:.02em;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--brass);margin-bottom:7px;}
+  select,input[type=password],input[type=text],input[type=number]{width:100%;background:var(--navy-deep);border:1px solid var(--line);color:var(--ivory);padding:11px 13px;border-radius:8px;font-size:14.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+  select:focus,input:focus{border-color:var(--brass);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brass);color:var(--navy-deep);border:none;padding:12px 20px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer;transition:transform .1s, background .15s;letter-spacing:.01em;}
+  .btn:hover{background:var(--brass-bright);}
+  .btn:active{transform:scale(.98);}
+  .btn.full{width:100%;margin-top:6px;}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ivory-dim);}
+  .btn.ghost:hover{border-color:var(--brass);color:var(--brass-bright);}
+  .btn.danger{background:var(--red);color:#2a0f0d;}
+  .btn.small{padding:7px 13px;font-size:13px;}
+  .login-err{color:var(--red);font-size:13px;margin:-6px 0 14px;}
+  .login-hint{margin-top:22px;font-size:11.5px;color:#7c8aa3;line-height:1.6;border-top:1px dashed var(--line);padding-top:16px;}
+  #app-screen{display:none;min-height:100vh;}
+  .shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+  .sidebar{background:linear-gradient(180deg,#111b30,#0d1526);border-right:1px solid var(--line);padding:26px 18px;display:flex;flex-direction:column;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:0 6px;}
+  .brand .vault-mark{width:30px;height:30px;margin:0;}
+  .brand .vault-mark::after{width:11px;height:11px;}
+  .brand-text{line-height:1.15;}
+  .brand-text b{display:block;font-family:'Fraunces',serif;font-size:16.5px;color:var(--ivory);letter-spacing:.01em;}
+  .brand-text span{font-size:10.5px;color:var(--ivory-dim);letter-spacing:.06em;}
+  .userbox{margin:20px 0 18px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;}
+  .userbox .name{font-weight:600;font-size:14px;color:var(--ivory);}
+  .userbox .role{font-size:11.5px;color:var(--brass);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+  .lang-fixed{position:fixed;top:14px;right:16px;display:flex;gap:4px;z-index:500;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:3px;box-shadow:0 6px 18px rgba(0,0,0,.35);}
+  .lang-btn{padding:5px 11px;border-radius:16px;background:transparent;border:none;color:var(--ivory-dim);font-size:11px;font-weight:700;cursor:pointer;text-align:center;letter-spacing:.03em;}
+  .lang-btn.active{background:var(--brass);color:var(--navy-deep);}
+  nav{flex:1;display:flex;flex-direction:column;gap:2px;margin-top:6px;}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;color:var(--ivory-dim);text-decoration:none;font-size:14px;cursor:pointer;border:1px solid transparent;transition:all .12s;}
+  .nav-item:hover{background:var(--navy-light);color:var(--ivory);}
+  .nav-item.active{background:var(--navy-light);color:var(--brass-bright);border-color:var(--line);font-weight:600;}
+  .nav-icon{width:18px;text-align:center;}
+  .day-badge{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .day-badge.open{background:var(--green-bg);color:var(--green);border:1px solid #285c3f;}
+  .day-badge.closed{background:var(--red-bg);color:var(--amber);border:1px solid #5a3a24;}
+  .sidebar-footer{margin-top:10px;text-align:center;font-size:10.5px;color:#5c6a85;letter-spacing:.04em;}
+  .main{padding:30px 38px 60px;overflow-x:hidden;}
+  .topline{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;flex-wrap:wrap;gap:14px;}
+  .topline h2{font-size:24px;margin:0 0 4px;color:var(--ivory);font-weight:600;}
+  .topline .sub{color:var(--ivory-dim);font-size:13.5px;margin:0;}
+  .grid{display:grid;gap:16px;}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:1000px){.grid.cols-4{grid-template-columns:repeat(2,1fr);} .grid.cols-3{grid-template-columns:repeat(2,1fr);}}
+  .card{background:linear-gradient(180deg,var(--navy-light),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
+  .stat-card .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--brass);margin-bottom:8px;}
+  .stat-card .value{font-family:'Fraunces',serif;font-size:26px;color:var(--ivory);font-weight:600;}
+  .stat-card .foot{font-size:12px;color:var(--ivory-dim);margin-top:6px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:20px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .panel-head h3{margin:0;font-size:16.5px;color:var(--ivory);font-weight:600;}
+  .panel-head .actions{display:flex;gap:8px;flex-wrap:wrap;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--brass);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:9px 10px;border-bottom:1px solid var(--line);}
+  td{padding:9px 10px;border-bottom:1px solid #223252;color:var(--ivory);}
+  tr:last-child td{border-bottom:none;}
+  td input[type=number]{width:90px;padding:6px 8px;font-size:13px;}
+  .num{font-family:'IBM Plex Mono',monospace;}
+  .right{text-align:right;}
+  .muted{color:var(--ivory-dim);}
+  .tag{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .tag.pending{background:#3a2f14;color:var(--amber);}
+  .tag.approved{background:var(--green-bg);color:var(--green);}
+  .tag.rejected{background:var(--red-bg);color:var(--red);}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab{padding:8px 15px;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--ivory-dim);font-size:13px;cursor:pointer;}
+  .tab.active{background:var(--brass);color:var(--navy-deep);font-weight:600;border-color:var(--brass);}
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .form-row .field{flex:1;min-width:160px;margin-bottom:0;}
+  .denom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin:14px 0 18px;}
+  .denom-box{background:var(--navy-deep);border:1px solid var(--line);border-radius:8px;padding:9px;}
+  .denom-box .d{font-size:11px;color:var(--brass);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;}
+  .denom-box input{padding:6px 7px;font-size:13px;}
+  .req-total{margin-top:6px;font-size:14px;color:var(--ivory-dim);}
+  .req-total b{color:var(--brass-bright);font-family:'IBM Plex Mono',monospace;}
+  .empty{padding:36px 10px;text-align:center;color:var(--ivory-dim);font-size:13.5px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--brass);color:var(--navy-deep);padding:12px 18px;border-radius:8px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;max-width:320px;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .badge-cash{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--navy-deep);color:var(--brass-bright);margin-left:8px;font-family:'IBM Plex Mono',monospace;}
+  .loading{padding:60px;text-align:center;color:var(--ivory-dim);}
+  select.small{width:auto;padding:8px 12px;}
+  .ledger-table thead.income th{background:var(--green-bg);color:var(--green);}
+  .ledger-table thead.expense th{background:var(--red-bg);color:var(--red);}
+  .ledger-wrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:1100px){.ledger-wrap{grid-template-columns:1fr;}}
+  .amt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:12px 0;}
+  .icon-btn{background:transparent;border:none;color:var(--ivory-dim);cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;}
+  .icon-btn:hover{background:var(--navy-light);color:var(--red);}
+  .pw-row{display:flex;gap:8px;align-items:center;}
+  .pw-row input{width:150px;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="lang-fixed"><div class="lang-btn" id="langTjLogin">ТОҶ</div><div class="lang-btn" id="langRuLogin">РУС</div></div>
+  <div class="login-card">
+    <div class="vault-mark"></div>
+    <h1>Azim Core</h1>
+    <p class="login-sub" id="loginSub">Системаи идоракунии хазинавии «Васл Бонк»</p>
+    <div class="field"><label id="lblLoginUser">Корбар</label><select id="loginUser"></select></div>
+    <div class="field"><label id="lblLoginPass">Рамз (Password)</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    <div class="login-err" id="loginErr" style="display:none;"></div>
+    <button class="btn full" id="loginBtn" onclick="handleLogin()">Вуруд</button>
+    <div class="login-hint" id="loginHint">Бор шудан истодааст…</div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <div class="lang-fixed"><div class="lang-btn" id="langTj">ТОҶ</div><div class="lang-btn" id="langRu">РУС</div></div>
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand"><div class="vault-mark"></div><div class="brand-text"><b>Azim Core</b><span id="brandSub">Хазинадорӣ V1</span></div></div>
+      <div class="userbox"><div class="name" id="ubName"></div><div class="role" id="ubRole"></div></div>
+      <nav id="navList"></nav>
+      <div class="day-badge" id="dayBadge"></div>
+      <button class="btn ghost full" style="margin-top:14px;" id="logoutBtn" onclick="logout()">Баромад</button>
+      <div class="sidebar-footer" id="sidebarFooter">Azim Core · V1.2.0</div>
+    </div>
+    <div class="main" id="mainArea"><div class="loading">Бор шудан истодааст…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APP_VERSION = 'V1.2.0';
+
+/* ================= I18N ================= */
+let LANG = 'tj';
+const T = {
+  login_sub:{tj:'Системаи идоракунии хазинавии «Васл Бонк»', ru:'Система управления казной «Васл Банк»'},
+  login_user:{tj:'Корбар', ru:'Пользователь'},
+  login_pass:{tj:'Рамз (Password)', ru:'Пароль'},
+  login_btn:{tj:'Вуруд', ru:'Войти'},
+  login_err:{tj:'Рамз нодуруст аст.', ru:'Неверный пароль.'},
+  login_hint:{tj:'Демо-версия V1 — маълумот дар хотираи муштарак нигоҳ дошта мешавад. Пароли ибтидоӣ: admin123 / mahzan123 / kassa123 (админ метавонад тағйир диҳад).',
+              ru:'Демо-версия V1 — данные хранятся в общей памяти. Пароль по умолчанию: admin123 / mahzan123 / kassa123 (админ может изменить).'},
+  logout:{tj:'Баромад', ru:'Выход'},
+  brand_sub:{tj:'Хазинадорӣ V1', ru:'Казначейство V1'},
+  role_admin:{tj:'Администратор', ru:'Администратор'},
+  role_mudir:{tj:'Мудири махзан', ru:'Заведующий кассой'},
+  role_kassir:{tj:'Кассир', ru:'Кассир'},
+  day_open:{tj:'🟢 Рӯз кушода', ru:'🟢 День открыт'},
+  day_closed:{tj:'🔒 Рӯз баста', ru:'🔒 День закрыт'},
+  nav_dashboard:{tj:'Саҳифаи асосӣ', ru:'Главная'},
+  nav_mahzan:{tj:'Махзан', ru:'Хранилище'},
+  nav_kassa:{tj:'Кассаҳо', ru:'Кассы'},
+  nav_requests:{tj:'Дархостҳо', ru:'Заявки'},
+  nav_journal:{tj:'Ҳаракати маблағ', ru:'Движение средств'},
+  nav_reports:{tj:'Ҳисобот', ru:'Отчёты'},
+  nav_users:{tj:'Корбарон', ru:'Пользователи'},
+  nav_settings:{tj:'Танзимот', ru:'Настройки'},
+  dash_welcome:{tj:'Хуш омадед,', ru:'Добро пожаловать,'},
+  dash_sub:{tj:'Дурнамои умумии Azim Core —', ru:'Общий обзор Azim Core —'},
+  current_balance:{tj:'Бақияи ҷорӣ', ru:'Текущий остаток'},
+  recent_ops:{tj:'Амалиётҳои охирини кассавӣ', ru:'Последние кассовые операции'},
+  no_ops:{tj:'Ҳанӯз амалиёт нест.', ru:'Пока нет операций.'},
+  mahzan_title:{tj:'Махзан', ru:'Хранилище'},
+  mahzan_sub:{tj:'Бақияи пурраи хазина рӯйи ҳама асъорҳо', ru:'Полный остаток казны по всем валютам'},
+  edit_btn:{tj:'✏️ Таҳрир', ru:'✏️ Изменить'},
+  save_btn:{tj:'💾 Захира кардан', ru:'💾 Сохранить'},
+  th_denom:{tj:'Номинал', ru:'Номинал'},
+  th_count:{tj:'Шумора', ru:'Количество'},
+  th_sum:{tj:'Сумма', ru:'Сумма'},
+  kassa_title:{tj:'Кассаҳо', ru:'Кассы'},
+  kassa_sub_switch:{tj:'Интихоби касса барои дидани бақия', ru:'Выберите кассу для просмотра остатка'},
+  kassa_sub_own:{tj:'Бақияи кассаи шумо', ru:'Остаток вашей кассы'},
+  tab_denoms:{tj:'Бақияи номиналҳо', ru:'Остаток по номиналам'},
+  tab_ledger:{tj:'Амалиёти кассавӣ (Приход/Расход)', ru:'Кассовые операции (Приход/Расход)'},
+  ledger_panel_title:{tj:'Кассавии амалиёт барои опер. рӯз', ru:'Кассовые операции за опер. день'},
+  income:{tj:'Приход', ru:'Приход'},
+  expense:{tj:'Расход', ru:'Расход'},
+  closing_title:{tj:'Остаток дар охири рӯз', ru:'Остаток в конце дня'},
+  th_no:{tj:'№', ru:'№'},
+  th_note:{tj:'Тавзеҳ', ru:'Примечание'},
+  th_currency:{tj:'Асъор', ru:'Валюта'},
+  th_opening:{tj:'Ибтидо', ru:'Начало'},
+  th_income:{tj:'Приход', ru:'Приход'},
+  th_expense:{tj:'Расход', ru:'Расход'},
+  th_closing:{tj:'Остаток', ru:'Остаток'},
+  no_entries:{tj:'Амалиёт нест.', ru:'Операций нет.'},
+  total_row:{tj:'Итого', ru:'Итого'},
+  edit_opening_btn:{tj:'✏️ Таҳрири бақияи ибтидоӣ', ru:'✏️ Изменить начальный остаток'},
+  save_opening_btn:{tj:'💾 Захира кардани бақияи ибтидоӣ', ru:'💾 Сохранить начальный остаток'},
+  cancel_btn:{tj:'Бекор кардан', ru:'Отмена'},
+  type_label:{tj:'Навъи амалиёт', ru:'Тип операции'},
+  type_income:{tj:'Приход (воридот)', ru:'Приход (поступление)'},
+  type_expense:{tj:'Расход (харочот)', ru:'Расход (списание)'},
+  note_label:{tj:'Тавзеҳ', ru:'Примечание'},
+  note_placeholder:{tj:'мисол: аз мизоҷ, пардохти хизмат...', ru:'напр.: от клиента, оплата услуги...'},
+  amount_label:{tj:'Сумма', ru:'Сумма'},
+  add_btn:{tj:'➕ Илова кардан', ru:'➕ Добавить'},
+  day_closed_msg:{tj:'🔒 Рӯзи амалиётӣ баста аст. Ворид кардани амалиёти нав мумкин нест.', ru:'🔒 Операционный день закрыт. Ввод новых операций недоступен.'},
+  day_closed_req_msg:{tj:'🔒 Рӯзи амалиётӣ баста аст. Дархости нав фиристодан ҳоло мумкин нест.', ru:'🔒 Операционный день закрыт. Отправка новой заявки недоступна.'},
+  export_excel:{tj:'⬇️ Зеркашӣ (Excel)', ru:'⬇️ Скачать (Excel)'},
+  requests_title:{tj:'Дархостҳо', ru:'Заявки'},
+  requests_sub_kassir:{tj:'Гирифтан/супоридани маблағ — худи шумо купюраро ворид карда тасдиқ мекунед', ru:'Получение/сдача средств — вы сами вводите купюры и подтверждаете'},
+  requests_sub_mgr:{tj:'Таърихи амалиётҳои кассирон (метавонед ислоҳ кунед)', ru:'История операций кассиров (вы можете редактировать)'},
+  new_request_title:{tj:'Дархости нав — тасдиқ ва иҷрои фаврӣ', ru:'Новая заявка — подтверждение и мгновенное исполнение'},
+  direction_label:{tj:'Самт', ru:'Направление'},
+  dir_from_mahzan:{tj:'Аз махзан гирифтан', ru:'Получить из хранилища'},
+  dir_to_mahzan:{tj:'Ба махзан супоридан', ru:'Сдать в хранилище'},
+  currency_label:{tj:'Асъор', ru:'Валюта'},
+  denoms_count_label:{tj:'Купюраҳое, ки гирифтед/супоридед — шумораи ҳар номинал', ru:'Купюры, которые вы получили/сдали — количество по каждому номиналу'},
+  total_label:{tj:'Ҷамъ', ru:'Итого'},
+  confirm_execute_btn:{tj:'✅ Тасдиқ ва иҷро', ru:'✅ Подтвердить и исполнить'},
+  confirm_note:{tj:'Бо пахши ин тугма шумо тасдиқ мекунед, ки шумораи купюраҳои воридшуда дуруст аст. Мудир ё Администратор метавонанд баъдтар ислоҳ кунанд.',
+                ru:'Нажимая эту кнопку, вы подтверждаете правильность введённого количества купюр. Заведующий или Администратор смогут исправить позже.'},
+  history_title:{tj:'Таърихи амалиётҳо', ru:'История операций'},
+  th_cashbox:{tj:'Касса', ru:'Касса'},
+  th_action:{tj:'Амал', ru:'Действие'},
+  th_denoms:{tj:'Номиналҳо', ru:'Номиналы'},
+  th_status:{tj:'Ҳолат', ru:'Статус'},
+  self_confirmed:{tj:'Тасдиқи худ (кассир)', ru:'Самоподтверждение (кассир)'},
+  edit_op_btn:{tj:'✏️ Иваз', ru:'✏️ Изменить'},
+  edit_request_title:{tj:'Ислоҳи амалиёти', ru:'Исправление операции'},
+  original_op_label:{tj:'Амалиёти аслии кассир:', ru:'Исходная операция кассира:'},
+  new_denoms_label:{tj:'Номиналҳои ислоҳшуда', ru:'Исправленные номиналы'},
+  new_total_label:{tj:'Ҷамъи нав', ru:'Новый итог'},
+  save_change_btn:{tj:'💾 Захира ва иваз кардан', ru:'💾 Сохранить изменение'},
+  journal_title:{tj:'Ҳаракати маблағ', ru:'Движение средств'},
+  journal_sub:{tj:'Журнали пурраи амалиётҳо (Audit Trail)', ru:'Полный журнал операций (Audit Trail)'},
+  th_trnum:{tj:'№ Амалиёт', ru:'№ Операции'},
+  th_time:{tj:'Вақт', ru:'Время'},
+  th_who:{tj:'Кӣ', ru:'Кто'},
+  reports_title:{tj:'Ҳисобот', ru:'Отчёты'},
+  reports_sub:{tj:'Ҷамъбасти умумии рӯзи амалиётӣ', ru:'Общий итог операционного дня'},
+  mahzan_balance_prefix:{tj:'Бақияи махзан ·', ru:'Остаток хранилища ·'},
+  all_kassa_balance_title:{tj:'Бақияи ҳамаи кассаҳо', ru:'Остаток всех касс'},
+  received_today_title:{tj:'Чӣ қадар гирифта шуд аз махзан (имрӯз)', ru:'Сколько получено из хранилища (сегодня)'},
+  given_today_title:{tj:'Чӣ қадар супорида шуд ба махзан (имрӯз)', ru:'Сколько сдано в хранилище (сегодня)'},
+  ops_suffix:{tj:'амалиёт', ru:'операций'},
+  ledger_summary_title:{tj:'Амалиёти кассавӣ — Приход/Расход (имрӯз)', ru:'Кассовые операции — Приход/Расход (сегодня)'},
+  no_ledger_today:{tj:'Имрӯз амалиёти кассавӣ сабт нашудааст.', ru:'Сегодня кассовых операций не зафиксировано.'},
+  denom_breakdown_title:{tj:'Тафсили купюраҳо (имрӯз)', ru:'Детализация купюр (сегодня)'},
+  all_kassas_option:{tj:'Ҳамаи кассаҳо', ru:'Все кассы'},
+  received_count_th:{tj:'Гирифта шуд (дона)', ru:'Получено (шт.)'},
+  given_count_th:{tj:'Супорида шуд (дона)', ru:'Сдано (шт.)'},
+  no_ops_filter:{tj:'Барои ин филтр имрӯз амалиёт нест.', ru:'По этому фильтру сегодня операций нет.'},
+  users_title:{tj:'Корбарон ва кассаҳо', ru:'Пользователи и кассы'},
+  users_sub:{tj:'Идораи корбарон, парол ва кассаҳо (танҳо Администратор)', ru:'Управление пользователями, паролями и кассами (только Администратор)'},
+  users_list_title:{tj:'Рӯйхати корбарон', ru:'Список пользователей'},
+  th_login:{tj:'Логин', ru:'Логин'},
+  th_name:{tj:'Ном', ru:'Имя'},
+  th_role:{tj:'Нақш', ru:'Роль'},
+  th_pw_change:{tj:'Тағйири парол', ru:'Смена пароля'},
+  pw_placeholder:{tj:'рамзи нав', ru:'новый пароль'},
+  pw_save_btn:{tj:'Захира', ru:'Сохранить'},
+  cashboxes_title:{tj:'Кассаҳо', ru:'Кассы'},
+  new_cashbox_label:{tj:'Номи кассаи нав', ru:'Название новой кассы'},
+  add_cashbox_btn:{tj:'➕ Илова кардани касса', ru:'➕ Добавить кассу'},
+  settings_title:{tj:'Танзимот', ru:'Настройки'},
+  settings_sub:{tj:'Идоракунии рӯзи амалиётӣ', ru:'Управление операционным днём'},
+  biz_day_desc:{tj:'Вақте рӯз баста мешавад, кассирон дигар наметавонанд амалиёти нав ворид кунанд. Танҳо Администратор метавонад рӯзи бастаро аз нав кушояд.',
+                ru:'Когда день закрыт, кассиры больше не могут вводить новые операции. Только Администратор может снова открыть закрытый день.'},
+  close_day_btn:{tj:'🔒 Бастани рӯз', ru:'🔒 Закрыть день'},
+  reopen_day_btn:{tj:'🔓 Кушодани рӯз (аз нав)', ru:'🔓 Открыть день заново'},
+  new_day_btn:{tj:'📅 Оғози рӯзи нав', ru:'📅 Начать новый день'},
+  audit_title:{tj:'Журнали таҳрирҳои дастӣ (Audit Trail)', ru:'Журнал ручных исправлений (Audit Trail)'},
+  th_when:{tj:'Вақт', ru:'Время'},
+  th_where:{tj:'Ҷой', ru:'Место'},
+  th_desc:{tj:'Тавзеҳ', ru:'Описание'},
+  no_audit:{tj:'Ҳанӯз таҳрире сабт нашудааст.', ru:'Пока правок не зафиксировано.'},
+  closed_tag:{tj:'Баста', ru:'Закрыт'},
+  open_tag:{tj:'Кушода', ru:'Открыт'},
+  toast_saved_mahzan:{tj:'Бақияи махзан захира шуд.', ru:'Остаток хранилища сохранён.'},
+  toast_saved_kassa:{tj:'Бақияи касса захира шуд.', ru:'Остаток кассы сохранён.'},
+  toast_amt_needed:{tj:'Лутфан ақаллан як сумма ворид кунед.', ru:'Пожалуйста, введите хотя бы одну сумму.'},
+  toast_op_added:{tj:'Амалиёт илова шуд.', ru:'Операция добавлена.'},
+  toast_denom_needed:{tj:'Лутфан миқдори номиналҳоро ворид кунед.', ru:'Пожалуйста, укажите количество номиналов.'},
+  toast_op_executed:{tj:'Амалиёт тасдиқ ва иҷро шуд.', ru:'Операция подтверждена и исполнена.'},
+  toast_op_edited:{tj:'Амалиёт ислоҳ шуд.', ru:'Операция исправлена.'},
+  toast_pw_changed:{tj:'Рамз иваз шуд.', ru:'Пароль изменён.'},
+  toast_pw_needed:{tj:'Рамзи навро ворид кунед.', ru:'Введите новый пароль.'},
+  toast_cb_deleted:{tj:'Касса нест карда шуд.', ru:'Касса удалена.'},
+  toast_cb_needed:{tj:'Номи кассаро ворид кунед.', ru:'Введите название кассы.'},
+  toast_cb_added:{tj:'Кассаи нав илова шуд.', ru:'Новая касса добавлена.'},
+  toast_day_closed:{tj:'Рӯз баста шуд.', ru:'День закрыт.'},
+  toast_day_reopened:{tj:'Рӯз аз нав кушода шуд.', ru:'День снова открыт.'},
+  toast_new_day:{tj:'Рӯзи амалиётии нав оғоз шуд.', ru:'Начат новый операционный день.'},
+  toast_opening_saved:{tj:'Бақияи ибтидоӣ захира шуд.', ru:'Начальный остаток сохранён.'},
+  ledger_included_note:{tj:'аз он ҷумла аз амалиёти кассавӣ (Приход/Расход)', ru:'в т.ч. за счёт кассовых операций (Приход/Расход)'},
+  delete_cb_confirm:{tj:'Кассаро нест мекунед? Маълумоти таърихӣ нигоҳ дошта мешавад, вале касса ва корбари вобаста нест мешаванд.',
+                      ru:'Удалить кассу? Исторические данные сохранятся, но касса и связанный пользователь будут удалены.'},
+};
+function t(key){ return (T[key] && T[key][LANG]) || key; }
+
+const CUR_LABELS = {
+  TJS:{tj:'Сомонӣ (қоғазӣ)', ru:'Сомони (банкноты)'},
+  TJSC:{tj:'Танга', ru:'Монеты'},
+  TJSF:{tj:'Сомонии фарсуда', ru:'Изношенные сомони'},
+  USD:{tj:'Доллари ИМА', ru:'Доллар США'},
+  EUR:{tj:'Евро', ru:'Евро'},
+  RUB:{tj:'Рубли Русия', ru:'Российский рубль'},
+  CNY:{tj:'Юани Чин', ru:'Китайский юань'},
+};
+function curLabel(cur){ return (CUR_LABELS[cur] && CUR_LABELS[cur][LANG]) || cur; }
+
+const DEFAULT_CASHBOX_NAMES = {
+  kassa1:{tj:'Касса №1', ru:'Касса №1'},
+  kassa2:{tj:'Касса №2', ru:'Касса №2'},
+  kassa3:{tj:'Касса №3', ru:'Касса №3'},
+  kassa_boz:{tj:'Кассаи бозшумор', ru:'Касса пересчёта'},
+};
+const DEFAULT_USER_NAMES = {
+  admin:{tj:'Администратор', ru:'Администратор'},
+  mahzan:{tj:'Мудири махзан', ru:'Заведующий кассой'},
+  kassa1:{tj:'Кассир №1', ru:'Кассир №1'},
+  kassa2:{tj:'Кассир №2', ru:'Кассир №2'},
+  kassa3:{tj:'Кассир №3', ru:'Кассир №3'},
+  kassa_boz:{tj:'Кассири бозшумор', ru:'Кассир пересчёта'},
+};
+
+/* ================= STATIC CONFIG ================= */
+const CURRENCIES = {
+  TJS:  { denoms:[500,200,100,50,20,10,5,3,1], symbol:'SM' },
+  TJSC: { denoms:[5,3,1,0.5,0.2,0.1,0.05,0.02,0.01], symbol:'т.' },
+  TJSF: { denoms:[500,200,100,50,20,10,5,3,1], symbol:'SM*' },
+  USD:  { denoms:[100,50,20,10,5,2,1], symbol:'$' },
+  EUR:  { denoms:[500,200,100,50,20,10,5], symbol:'€' },
+  RUB:  { denoms:[5000,2000,1000,500,200,100,50,10,5], symbol:'₽' },
+  CNY:  { denoms:[100,50,20,10,5,1], symbol:'¥' },
+};
+const LEDGER_CURRENCIES = ['TJS','USD','EUR','RUB','CNY'];
+const DEFAULT_CASHBOXES = { kassa1:{label:'Касса №1'}, kassa2:{label:'Касса №2'}, kassa3:{label:'Касса №3'}, kassa_boz:{label:'Кассаи бозшумор'} };
+const DEFAULT_USERS = {
+  admin:     { name:'Администратор',    role:'admin',  password:'admin123' },
+  mahzan:    { name:'Мудири махзан',    role:'mudir',  password:'mahzan123' },
+  kassa1:    { name:'Кассир №1',        role:'kassir', cashbox:'kassa1',    password:'kassa123' },
+  kassa2:    { name:'Кассир №2',        role:'kassir', cashbox:'kassa2',    password:'kassa123' },
+  kassa3:    { name:'Кассир №3',        role:'kassir', cashbox:'kassa3',    password:'kassa123' },
+  kassa_boz: { name:'Кассири бозшумор', role:'kassir', cashbox:'kassa_boz', password:'kassa123' },
+};
+
+let STATE = null;
+let CURRENT_USER = null;
+let CURRENT_PAGE = 'dashboard';
+let selectedKassaView = null;
+let reqDraft = null;
+let editingReqId = null;
+let editReqDraft = null;
+let kassaTab = 'denoms';
+let ledgerDraft = null;
+let openingEditMode = false;
+let editingCbId = null;
+
+/* ================= STORAGE ================= */
+const STORAGE_KEY = 'azimcore_state_v1';
+const LANG_KEY = 'azimcore_lang';
+
+function emptyBalancesFor(locs){
+  const b = {};
+  locs.forEach(loc=>{
+    b[loc] = {};
+    Object.keys(CURRENCIES).forEach(cur=>{ b[loc][cur] = {}; CURRENCIES[cur].denoms.forEach(d=> b[loc][cur][d]=0); });
+  });
+  return b;
+}
+function defaultState(){
+  const cashboxes = JSON.parse(JSON.stringify(DEFAULT_CASHBOXES));
+  const users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+  const locs = ['mahzan', ...Object.keys(cashboxes)];
+  const ledger = {};
+  Object.keys(cashboxes).forEach(id=> ledger[id] = { opening:{}, entries:[] });
+  return { cashboxes, users, balances: emptyBalancesFor(locs), cashLedger: ledger, requests: [], journal: [],
+           trCounter: 0, businessDay: { date: todayStr(), closed:false }, createdAt: Date.now() };
+}
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+function normalizeState(raw){
+  STATE = raw;
+  if(!STATE.cashboxes) STATE.cashboxes = JSON.parse(JSON.stringify(DEFAULT_CASHBOXES));
+  if(!STATE.users) STATE.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+  if(!STATE.cashLedger) STATE.cashLedger = {};
+  const locs = ['mahzan', ...Object.keys(STATE.cashboxes)];
+  const fresh = emptyBalancesFor(locs);
+  Object.keys(fresh).forEach(loc=>{
+    if(!STATE.balances[loc]) STATE.balances[loc] = fresh[loc];
+    Object.keys(fresh[loc]).forEach(cur=>{ if(!STATE.balances[loc][cur]) STATE.balances[loc][cur] = fresh[loc][cur]; });
+  });
+  Object.keys(STATE.cashboxes).forEach(id=>{ if(!STATE.cashLedger[id]) STATE.cashLedger[id] = { opening:{}, entries:[] }; });
+}
+
+async function loadState(){
+  try{
+    const res = await fetch('/api/state');
+    const data = await res.json();
+    if(data && data.value){ normalizeState(data.value); return; }
+  }catch(e){ console.error(e); }
+  STATE = defaultState();
+  await saveState();
+}
+async function saveState(){
+  try{
+    const res = await fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(STATE) });
+    if(!res.ok) throw new Error('save_failed');
+  }catch(e){ console.error(e); showToast('Хатои пайвастшавӣ бо сервер! / Ошибка соединения с сервером!'); }
+}
+async function loadLang(){
+  try{ const l = localStorage.getItem(LANG_KEY); if(l) LANG = l; }catch(e){ /* default tj */ }
+}
+async function setLang(l){
+  LANG = l;
+  try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
+  applyStaticTranslations();
+  if(CURRENT_USER){ buildNav(); render(); }
+  else { populateLoginUsers(); }
+}
+
+// Poll the server every few seconds so changes made on other computers appear here too.
+// Skipped while the person is mid-edit locally, so it never overwrites unsaved input.
+let pollTimer = null;
+function isMidEdit(){
+  return mahzanEditMode || kassaEditMode || !!editingReqId || !!editingCbId || openingEditMode || !!ledgerDraft || !!reqDraft;
+}
+function startPolling(){
+  if(pollTimer) return;
+  pollTimer = setInterval(async ()=>{
+    if(!CURRENT_USER || isMidEdit()) return;
+    try{
+      const res = await fetch('/api/state');
+      const data = await res.json();
+      if(data && data.value){ normalizeState(data.value); render(); }
+    }catch(e){ /* offline — try again next tick */ }
+  }, 8000);
+}
+
+function applyStaticTranslations(){
+  document.getElementById('loginSub').textContent = t('login_sub');
+  document.getElementById('lblLoginUser').textContent = t('login_user');
+  document.getElementById('lblLoginPass').textContent = t('login_pass');
+  document.getElementById('loginBtn').textContent = t('login_btn');
+  document.getElementById('loginHint').textContent = t('login_hint');
+  document.getElementById('brandSub').textContent = t('brand_sub');
+  document.getElementById('logoutBtn').textContent = t('logout');
+  document.getElementById('sidebarFooter').textContent = 'Azim Core · ' + APP_VERSION;
+  document.getElementById('langTj').classList.toggle('active', LANG==='tj');
+  document.getElementById('langRu').classList.toggle('active', LANG==='ru');
+  document.getElementById('langTjLogin').classList.toggle('active', LANG==='tj');
+  document.getElementById('langRuLogin').classList.toggle('active', LANG==='ru');
+  if(CURRENT_USER){
+    document.getElementById('ubRole').textContent = roleLabel(CURRENT_USER.role);
+  }
+}
+
+/* ================= AUTH ================= */
+function populateLoginUsers(){
+  const sel = document.getElementById('loginUser');
+  sel.innerHTML = '';
+  Object.entries(STATE.users).forEach(([key,u])=>{
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = userDisplayName(key,u) + ' ('+key+')';
+    sel.appendChild(opt);
+  });
+}
+function userDisplayName(key,u){ return (DEFAULT_USER_NAMES[key] && DEFAULT_USER_NAMES[key][LANG]) || u.name; }
+
+async function handleLogin(){
+  await loadState();
+  const key = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+  const u = STATE.users[key];
+  const errEl = document.getElementById('loginErr');
+  if(!u || u.password !== pass){ errEl.style.display='block'; errEl.textContent = t('login_err'); return; }
+  errEl.style.display='none';
+  CURRENT_USER = { key, ...u };
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.getElementById('ubName').textContent = userDisplayName(key,u);
+  document.getElementById('ubRole').textContent = roleLabel(u.role);
+  if(u.role==='kassir') selectedKassaView = u.cashbox;
+  else selectedKassaView = Object.keys(STATE.cashboxes)[0];
+  CURRENT_PAGE = 'dashboard';
+  buildNav();
+  navigate('dashboard');
+  startPolling();
+}
+function logout(){
+  CURRENT_USER = null;
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  document.getElementById('loginPass').value='';
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+function roleLabel(r){ return t('role_'+r) || r; }
+function cashboxLabel(id){
+  if(DEFAULT_CASHBOX_NAMES[id]) return DEFAULT_CASHBOX_NAMES[id][LANG];
+  return STATE.cashboxes[id] ? STATE.cashboxes[id].label : (id + ' (—)');
+}
+
+/* ================= NAV ================= */
+const MENU = [
+  { id:'dashboard', icon:'🏠', key:'nav_dashboard', roles:['admin','mudir','kassir'] },
+  { id:'mahzan',    icon:'🏦', key:'nav_mahzan',     roles:['admin','mudir'] },
+  { id:'kassa',     icon:'💰', key:'nav_kassa',      roles:['admin','mudir','kassir'] },
+  { id:'requests',  icon:'📨', key:'nav_requests',   roles:['admin','mudir','kassir'] },
+  { id:'journal',   icon:'📜', key:'nav_journal',    roles:['admin','mudir','kassir'] },
+  { id:'reports',   icon:'📊', key:'nav_reports',    roles:['admin','mudir'] },
+  { id:'users',     icon:'👥', key:'nav_users',      roles:['admin'] },
+  { id:'settings',  icon:'⚙',  key:'nav_settings',   roles:['admin','mudir'] },
+];
+function buildNav(){
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  MENU.filter(m=>m.roles.includes(CURRENT_USER.role)).forEach(m=>{
+    const a = document.createElement('div');
+    a.className = 'nav-item' + (CURRENT_PAGE===m.id?' active':'');
+    a.dataset.page = m.id;
+    a.innerHTML = `<span class="nav-icon">${m.icon}</span><span>${t(m.key)}</span>`;
+    a.onclick = ()=> navigate(m.id);
+    nav.appendChild(a);
+  });
+  renderDayBadge();
+  document.getElementById('langTj').onclick = ()=> setLang('tj');
+  document.getElementById('langRu').onclick = ()=> setLang('ru');
+  document.getElementById('langTj').classList.toggle('active', LANG==='tj');
+  document.getElementById('langRu').classList.toggle('active', LANG==='ru');
+}
+function renderDayBadge(){
+  const el = document.getElementById('dayBadge');
+  const closed = STATE.businessDay.closed;
+  el.className = 'day-badge ' + (closed?'closed':'open');
+  el.innerHTML = `<span>${closed?t('day_closed'):t('day_open')}</span><span class="mono">${STATE.businessDay.date}</span>`;
+}
+function navigate(page){
+  if(page !== 'requests'){ editingReqId = null; editReqDraft = null; }
+  if(page !== 'kassa'){ ledgerDraft = null; openingEditMode = false; }
+  if(page !== 'users'){ editingCbId = null; }
+  CURRENT_PAGE = page;
+  document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.page===page));
+  render();
+}
+
+/* ================= HELPERS ================= */
+function ledgerNetBalance(loc, cur){
+  if(loc==='mahzan' || !STATE.cashboxes[loc] || !LEDGER_CURRENCIES.includes(cur)) return 0;
+  const l = STATE.cashLedger[loc];
+  if(!l) return 0;
+  const inc = l.entries.filter(e=>e.type==='income').reduce((s,e)=> s+(e.amounts[cur]||0), 0);
+  const exp = l.entries.filter(e=>e.type==='expense').reduce((s,e)=> s+(e.amounts[cur]||0), 0);
+  return (l.opening[cur]||0) + inc - exp;
+}
+function sumBalance(loc, cur){
+  let denomSum = 0;
+  if(STATE.balances[loc] && STATE.balances[loc][cur]){
+    denomSum = Object.entries(STATE.balances[loc][cur]).reduce((s,[d,c])=> s + (parseFloat(d)*c), 0);
+  }
+  return denomSum + ledgerNetBalance(loc, cur);
+}
+function fmt(n){ return n.toLocaleString('ru-RU',{minimumFractionDigits:(n%1!==0?2:0), maximumFractionDigits:2}); }
+function fmtMoney(n, cur){ return fmt(n) + ' ' + (CURRENCIES[cur]?CURRENCIES[cur].symbol:cur); }
+function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
+function nextTrNumber(){ STATE.trCounter += 1; const y=new Date().getFullYear(); return 'TR-'+y+'-'+String(STATE.trCounter).padStart(6,'0'); }
+function nowTs(){ const d=new Date(); return d.toLocaleDateString('tg-TJ')+' '+d.toLocaleTimeString('tg-TJ',{hour:'2-digit',minute:'2-digit'}); }
+function canEditBalances(){ return CURRENT_USER.role==='admin' || CURRENT_USER.role==='mudir'; }
+function dayIsClosed(){ return STATE.businessDay.closed; }
+async function saveWorkbook(wb, filename){
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function styleHeaderRow(row, fillArgb){
+  row.eachCell(c=>{
+    c.font = {bold:true, color:{argb:'FFFFFFFF'}};
+    c.fill = {type:'pattern', pattern:'solid', fgColor:{argb: fillArgb || 'FFC19A5B'}};
+    c.alignment = {horizontal:'center', vertical:'middle'};
+    c.border = {top:{style:'thin',color:{argb:'FF888888'}}, left:{style:'thin',color:{argb:'FF888888'}}, bottom:{style:'thin',color:{argb:'FF888888'}}, right:{style:'thin',color:{argb:'FF888888'}}};
+  });
+}
+function borderAllCells(ws){
+  ws.eachRow(r=> r.eachCell(c=>{
+    c.border = {top:{style:'thin',color:{argb:'FFDDDDDD'}}, left:{style:'thin',color:{argb:'FFDDDDDD'}}, bottom:{style:'thin',color:{argb:'FFDDDDDD'}}, right:{style:'thin',color:{argb:'FFDDDDDD'}}};
+  }));
+}
+async function exportSimpleStyled(filename, sheetName, rows){
+  if(typeof ExcelJS==='undefined'){ showToast('Excel module not loaded'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(sheetName.slice(0,28));
+  const safeRows = rows && rows.length ? rows : [{' ':''}];
+  const headers = Object.keys(safeRows[0]);
+  ws.columns = headers.map(h=>({header:h, key:h, width: Math.max(12, h.length+4)}));
+  ws.addRows(safeRows);
+  styleHeaderRow(ws.getRow(1), 'FFC19A5B');
+  borderAllCells(ws);
+  await saveWorkbook(wb, filename);
+}
+async function exportMultiSheetStyled(filename, sheetsObj){
+  if(typeof ExcelJS==='undefined'){ showToast('Excel module not loaded'); return; }
+  const wb = new ExcelJS.Workbook();
+  Object.entries(sheetsObj).forEach(([name, rows])=>{
+    const ws = wb.addWorksheet(name.slice(0,28));
+    const safeRows = rows && rows.length ? rows : [{' ':''}];
+    const headers = Object.keys(safeRows[0]);
+    ws.columns = headers.map(h=>({header:h, key:h, width: Math.max(12, h.length+4)}));
+    ws.addRows(safeRows);
+    styleHeaderRow(ws.getRow(1), 'FFC19A5B');
+    borderAllCells(ws);
+  });
+  await saveWorkbook(wb, filename);
+}
+async function exportLedgerStyled(cashboxId, day, incomeEntries, expenseEntries){
+  if(typeof ExcelJS==='undefined'){ showToast('Excel module not loaded'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(t('ledger_panel_title').slice(0,28));
+  const cur5 = LEDGER_CURRENCIES; // TJS,USD,EUR,RUB,CNY
+  const n = cur5.length;
+  const c1a=1, c1b=2, c1c=3, c1cEnd=2+n;          // income: No, Note, currencies
+  const spacer = c1cEnd+1;                          // 8
+  const c2a=spacer+1, c2b=spacer+2, c2c=spacer+3, c2cEnd=spacer+2+n; // expense block
+  const totalCols = c2cEnd;
+
+  ws.columns = [
+    {width:5},{width:22}, ...cur5.map(()=>({width:12})), {width:3},
+    {width:5},{width:22}, ...cur5.map(()=>({width:12})),
+  ];
+
+  ws.mergeCells(1,1,1,totalCols);
+  const title = ws.getCell(1,1);
+  title.value = `${t('ledger_panel_title')} — ${cashboxLabel(cashboxId)} — ${day}`;
+  title.font = {bold:true, size:14, color:{argb:'FF10192B'}};
+  title.alignment = {horizontal:'center', vertical:'middle'};
+  ws.getRow(1).height = 26;
+
+  ws.mergeCells(2, c1a, 2, c1cEnd);
+  const incHead = ws.getCell(2, c1a);
+  incHead.value = t('income'); incHead.font={bold:true,size:12,color:{argb:'FFFFFFFF'}};
+  incHead.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF2E7D46'}}; incHead.alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(2, c2a, 2, c2cEnd);
+  const expHead = ws.getCell(2, c2a);
+  expHead.value = t('expense'); expHead.font={bold:true,size:12,color:{argb:'FFFFFFFF'}};
+  expHead.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFB0413E'}}; expHead.alignment={horizontal:'center',vertical:'middle'};
+
+  const hRow = ws.getRow(3);
+  hRow.getCell(c1a).value = t('th_no'); hRow.getCell(c1b).value = t('th_note');
+  cur5.forEach((c,i)=> hRow.getCell(c1c+i).value = c);
+  hRow.getCell(c2a).value = t('th_no'); hRow.getCell(c2b).value = t('th_note');
+  cur5.forEach((c,i)=> hRow.getCell(c2c+i).value = c);
+  [c1a,c1b,...cur5.map((_,i)=>c1c+i)].forEach(ci=>{ const cell=hRow.getCell(ci); cell.font={bold:true}; cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDDEFE0'}}; cell.alignment={horizontal:'center'}; });
+  [c2a,c2b,...cur5.map((_,i)=>c2c+i)].forEach(ci=>{ const cell=hRow.getCell(ci); cell.font={bold:true}; cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF3DCDA'}}; cell.alignment={horizontal:'center'}; });
+
+  const maxLen = Math.max(incomeEntries.length, expenseEntries.length, 1);
+  const incTotals = {}, expTotals = {};
+  for(let i=0;i<maxLen;i++){
+    const r = ws.getRow(4+i);
+    const ie = incomeEntries[i];
+    if(ie){
+      r.getCell(c1a).value = i+1; r.getCell(c1b).value = ie.note||'';
+      cur5.forEach((c,ci)=>{ const v = ie.amounts[c]||0; if(v){ r.getCell(c1c+ci).value = v; incTotals[c]=(incTotals[c]||0)+v; } });
+    }
+    const ee = expenseEntries[i];
+    if(ee){
+      r.getCell(c2a).value = i+1; r.getCell(c2b).value = ee.note||'';
+      cur5.forEach((c,ci)=>{ const v = ee.amounts[c]||0; if(v){ r.getCell(c2c+ci).value = v; expTotals[c]=(expTotals[c]||0)+v; } });
+    }
+  }
+
+  const totRowIdx = 4+maxLen;
+  const totRow = ws.getRow(totRowIdx);
+  ws.mergeCells(totRowIdx, c1a, totRowIdx, c1b);
+  totRow.getCell(c1a).value = t('total_row')+':'; totRow.getCell(c1a).font={bold:true};
+  cur5.forEach((c,ci)=>{ const cell=totRow.getCell(c1c+ci); cell.value = incTotals[c]||0; cell.font={bold:true}; });
+  ws.mergeCells(totRowIdx, c2a, totRowIdx, c2b);
+  totRow.getCell(c2a).value = t('total_row')+':'; totRow.getCell(c2a).font={bold:true};
+  cur5.forEach((c,ci)=>{ const cell=totRow.getCell(c2c+ci); cell.value = expTotals[c]||0; cell.font={bold:true}; });
+  totRow.eachCell(c=>{ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0EBDD'}}; });
+
+  const ledger = ledgerFor(cashboxId);
+  const balTitleRow = totRowIdx+2;
+  ws.mergeCells(balTitleRow,1,balTitleRow,5);
+  const bt = ws.getCell(balTitleRow,1); bt.value = t('closing_title'); bt.font={bold:true,size:12};
+  const balHeadRow = ws.getRow(balTitleRow+1);
+  ['th_currency','th_opening','th_income','th_expense','th_closing'].forEach((k,i)=>{ balHeadRow.getCell(i+1).value = t(k); });
+  styleHeaderRow(balHeadRow, 'FFC19A5B');
+  cur5.forEach((c,i)=>{
+    const opening = ledger.opening[c]||0;
+    const income = incTotals[c]||0, expense = expTotals[c]||0;
+    const row = ws.getRow(balTitleRow+2+i);
+    row.getCell(1).value = curLabel(c); row.getCell(2).value = opening; row.getCell(3).value = income;
+    row.getCell(4).value = expense; row.getCell(5).value = opening+income-expense;
+    row.getCell(5).font = {bold:true};
+  });
+
+  ws.getRow(3).eachCell(c=>{ c.border = {top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}; });
+  await saveWorkbook(wb, `Кассави_${cashboxId}_${day}.xlsx`);
+}
+
+/* ================= RENDER ROUTER ================= */
+function render(){
+  buildNav();
+  const el = document.getElementById('mainArea');
+  el.innerHTML = '';
+  switch(CURRENT_PAGE){
+    case 'dashboard': renderDashboard(el); break;
+    case 'mahzan':    renderMahzan(el); break;
+    case 'kassa':     renderKassa(el); break;
+    case 'requests':  renderRequests(el); break;
+    case 'journal':   renderJournal(el); break;
+    case 'reports':   renderReports(el); break;
+    case 'users':     renderUsers(el); break;
+    case 'settings':  renderSettings(el); break;
+    default: el.innerHTML = '<div class="empty">—</div>';
+  }
+}
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(el){
+  el.insertAdjacentHTML('beforeend', `<div class="topline"><div><h2>${t('dash_welcome')} ${CURRENT_USER.name}</h2><p class="sub">${t('dash_sub')} ${STATE.businessDay.date}</p></div></div>`);
+  let cardsHtml = '<div class="grid cols-4">';
+  if(CURRENT_USER.role!=='kassir'){
+    Object.keys(CURRENCIES).forEach(cur=>{
+      const total = sumBalance('mahzan', cur);
+      cardsHtml += `<div class="card stat-card"><div class="label">${t('mahzan_balance_prefix')} ${curLabel(cur)}</div><div class="value">${fmtMoney(total,cur)}</div><div class="foot">${t('current_balance')}</div></div>`;
+    });
+  } else {
+    const cb = CURRENT_USER.cashbox;
+    Object.keys(CURRENCIES).forEach(cur=>{
+      const total = sumBalance(cb, cur);
+      cardsHtml += `<div class="card stat-card"><div class="label">${cashboxLabel(cb)} · ${curLabel(cur)}</div><div class="value">${fmtMoney(total,cur)}</div><div class="foot">${t('current_balance')}</div></div>`;
+    });
+  }
+  cardsHtml += '</div>';
+  el.insertAdjacentHTML('beforeend', cardsHtml);
+  const isKassir = CURRENT_USER.role==='kassir';
+  const recentReq = STATE.requests.filter(r=> !isKassir || r.cashbox===CURRENT_USER.cashbox).slice().reverse().slice(0,6);
+  el.insertAdjacentHTML('beforeend', `
+    <div class="panel" style="margin-top:20px;">
+      <div class="panel-head"><h3>${t('recent_ops')}</h3></div>
+      ${recentReq.length? renderRequestsTable(recentReq, false) : `<div class="empty">${t('no_ops')}</div>`}
+    </div>
+  `);
+}
+
+/* ================= MAHZAN ================= */
+let mahzanEditMode = false;
+function renderMahzan(el){
+  el.insertAdjacentHTML('beforeend', `
+    <div class="topline">
+      <div><h2>${t('mahzan_title')}</h2><p class="sub">${t('mahzan_sub')}</p></div>
+      ${canEditBalances() ? `<button class="btn ${mahzanEditMode?'':'ghost'}" id="mahzanEditBtn">${mahzanEditMode?t('save_btn'):t('edit_btn')}</button>` : ''}
+    </div>
+  `);
+  const grid = document.createElement('div');
+  grid.className='grid cols-2';
+  Object.keys(CURRENCIES).forEach(cur=> grid.appendChild(currencyPanel('mahzan', cur)));
+  el.appendChild(grid);
+  if(canEditBalances()){
+    document.getElementById('mahzanEditBtn').onclick = async ()=>{
+      if(mahzanEditMode){ collectEditedValues('mahzan'); await saveState(); showToast(t('toast_saved_mahzan')); mahzanEditMode=false; }
+      else mahzanEditMode = true;
+      render();
+    };
+  }
+}
+function currencyPanel(loc, cur){
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  const total = sumBalance(loc, cur);
+  const ledgerPart = ledgerNetBalance(loc, cur);
+  const editable = (loc==='mahzan' ? mahzanEditMode : kassaEditMode) && canEditBalances();
+  let rows = CURRENCIES[cur].denoms.map(d=>{
+    const count = STATE.balances[loc][cur][d] || 0;
+    const sum = d*count;
+    return `<tr><td class="num">${fmt(d)}</td>
+      <td>${editable ? `<input type="number" min="0" data-loc="${loc}" data-cur="${cur}" data-d="${d}" class="edit-input" value="${count}">` : `<span class="num">${count}</span>`}</td>
+      <td class="right num">${fmt(sum)}</td></tr>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="panel-head"><h3>${curLabel(cur)} <span class="badge-cash">${CURRENCIES[cur].symbol}</span></h3>
+    <span class="num" style="color:var(--brass-bright);font-weight:600;">${fmtMoney(total,cur)}</span></div>
+    ${ledgerPart ? `<div class="muted" style="font-size:11.5px;margin:-8px 0 12px;">${t('ledger_included_note')}: ${fmtMoney(ledgerPart,cur)}</div>` : ''}
+    <table><thead><tr><th>${t('th_denom')}</th><th>${t('th_count')}</th><th class="right">${t('th_sum')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return wrap;
+}
+function collectEditedValues(loc){
+  document.querySelectorAll(`.edit-input[data-loc="${loc}"]`).forEach(inp=>{
+    const cur = inp.dataset.cur, d = inp.dataset.d;
+    STATE.balances[loc][cur][d] = Math.max(0, parseInt(inp.value)||0);
+  });
+  STATE.journal.push({ id:'AUD-'+Date.now(), trNumber:null, ts:nowTs(), type:'audit_edit', location:loc,
+    note:`Manual balance edit by ${CURRENT_USER.name}`, by:CURRENT_USER.name, device:navigator.userAgent.slice(0,40) });
+}
+
+/* ================= KASSA ================= */
+let kassaEditMode = false;
+function renderKassa(el){
+  const canSwitch = CURRENT_USER.role!=='kassir';
+  el.insertAdjacentHTML('beforeend', `
+    <div class="topline"><div><h2>${t('kassa_title')}</h2><p class="sub">${canSwitch?t('kassa_sub_switch'):t('kassa_sub_own')}</p></div>
+      <div style="display:flex;gap:10px;">${canSwitch ? `<select class="small" id="kassaSelect"></select>` : ''}</div></div>
+  `);
+  if(canSwitch){
+    const sel = document.getElementById('kassaSelect');
+    Object.keys(STATE.cashboxes).forEach(k=>{
+      const opt = document.createElement('option'); opt.value=k; opt.textContent=cashboxLabel(k);
+      if(k===selectedKassaView) opt.selected=true; sel.appendChild(opt);
+    });
+    sel.onchange = ()=>{ selectedKassaView = sel.value; kassaEditMode=false; render(); };
+  } else { selectedKassaView = CURRENT_USER.cashbox; }
+
+  el.insertAdjacentHTML('beforeend', `
+    <div class="tabs">
+      <div class="tab ${kassaTab==='denoms'?'active':''}" id="tabDenoms">${t('tab_denoms')}</div>
+      <div class="tab ${kassaTab==='ledger'?'active':''}" id="tabLedger">${t('tab_ledger')}</div>
+    </div>`);
+  document.getElementById('tabDenoms').onclick = ()=>{ kassaTab='denoms'; render(); };
+  document.getElementById('tabLedger').onclick = ()=>{ kassaTab='ledger'; render(); };
+
+  if(kassaTab==='denoms'){
+    el.insertAdjacentHTML('beforeend', `<div style="text-align:right;margin-bottom:10px;">${canEditBalances() ? `<button class="btn ${kassaEditMode?'':'ghost'}" id="kassaEditBtn">${kassaEditMode?t('save_btn'):t('edit_btn')}</button>` : ''}</div>`);
+    const grid = document.createElement('div'); grid.className='grid cols-2';
+    Object.keys(CURRENCIES).forEach(cur=> grid.appendChild(currencyPanel(selectedKassaView, cur)));
+    el.appendChild(grid);
+    if(canEditBalances()){
+      document.getElementById('kassaEditBtn').onclick = async ()=>{
+        if(kassaEditMode){ collectEditedValues(selectedKassaView); await saveState(); showToast(t('toast_saved_kassa')); kassaEditMode=false; }
+        else kassaEditMode = true;
+        render();
+      };
+    }
+  } else {
+    renderCashLedger(el, selectedKassaView);
+  }
+}
+
+/* ------------ CASH LEDGER ------------ */
+function ledgerFor(cashboxId){
+  if(!STATE.cashLedger[cashboxId]) STATE.cashLedger[cashboxId] = { opening:{}, entries:[] };
+  return STATE.cashLedger[cashboxId];
+}
+function renderCashLedger(el, cashboxId){
+  const ledger = ledgerFor(cashboxId);
+  const day = STATE.businessDay.date;
+  const todays = ledger.entries.filter(e=> e.day===day);
+  const incomeEntries = todays.filter(e=>e.type==='income');
+  const expenseEntries = todays.filter(e=>e.type==='expense');
+  const canAdd = (CURRENT_USER.role==='kassir' && CURRENT_USER.cashbox===cashboxId) || CURRENT_USER.role==='admin' || CURRENT_USER.role==='mudir';
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class="panel">
+      <div class="panel-head"><h3>${t('ledger_panel_title')} — ${cashboxLabel(cashboxId)}</h3><span class="muted mono">${day}</span></div>
+      ${canAdd ? `<div id="ledgerForm"></div>` : ''}
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>${t('closing_title')}</h3>
+        <button class="btn ghost small" id="exportLedgerBtn">${t('export_excel')}</button></div>
+      <div id="openingBalanceBox"></div>
+    </div>
+    <div class="ledger-wrap">
+      <div class="panel"><div class="panel-head"><h3 style="color:var(--green);">${t('income')}</h3></div>
+        ${renderLedgerTable(incomeEntries,'income')}</div>
+      <div class="panel"><div class="panel-head"><h3 style="color:var(--red);">${t('expense')}</h3></div>
+        ${renderLedgerTable(expenseEntries,'expense')}</div>
+    </div>
+  `;
+  el.appendChild(wrap);
+  if(canAdd) renderLedgerForm(wrap.querySelector('#ledgerForm'), cashboxId);
+  renderOpeningBalanceBox(wrap.querySelector('#openingBalanceBox'), cashboxId, incomeEntries, expenseEntries);
+
+  wrap.querySelector('#exportLedgerBtn').onclick = ()=> exportLedgerStyled(cashboxId, day, incomeEntries, expenseEntries);
+}
+function renderLedgerTable(entries, type){
+  if(!entries.length) return `<div class="empty">${t('no_entries')}</div>`;
+  const totals = {};
+  const rows = entries.map((e,idx)=>{
+    LEDGER_CURRENCIES.forEach(c=>{ if(e.amounts[c]) totals[c]=(totals[c]||0)+e.amounts[c]; });
+    const cells = LEDGER_CURRENCIES.map(c=> `<td class="right num">${e.amounts[c]?fmt(e.amounts[c]):'—'}</td>`).join('');
+    return `<tr><td>${idx+1}</td><td>${e.note||'—'}<div class="muted" style="font-size:11px;">${e.ts} · ${e.by}</div></td>${cells}</tr>`;
+  }).join('');
+  const totalCells = LEDGER_CURRENCIES.map(c=> `<td class="right num" style="color:var(--brass-bright);font-weight:600;">${totals[c]?fmt(totals[c]):'—'}</td>`).join('');
+  return `<table class="ledger-table"><thead class="${type}"><tr><th>${t('th_no')}</th><th>${t('th_note')}</th>${LEDGER_CURRENCIES.map(c=>`<th class="right">${c}</th>`).join('')}</tr></thead>
+    <tbody>${rows}<tr><td></td><td><b>${t('total_row')}</b></td>${totalCells}</tr></tbody></table>`;
+}
+function renderOpeningBalanceBox(box, cashboxId, incomeEntries, expenseEntries){
+  const ledger = ledgerFor(cashboxId);
+  function draw(){
+    if(!openingEditMode){
+      const rows = LEDGER_CURRENCIES.map(c=>{
+        const opening = ledger.opening[c] || 0;
+        const income = incomeEntries.reduce((s,e)=> s+(e.amounts[c]||0),0);
+        const expense = expenseEntries.reduce((s,e)=> s+(e.amounts[c]||0),0);
+        const closing = opening + income - expense;
+        return `<tr><td>${curLabel(c)}</td><td class="right num">${fmt(opening)}</td><td class="right num" style="color:var(--green);">${fmt(income)}</td><td class="right num" style="color:var(--red);">${fmt(expense)}</td><td class="right num" style="color:var(--brass-bright);font-weight:600;">${fmt(closing)}</td></tr>`;
+      }).join('');
+      box.innerHTML = `<table><thead><tr><th>${t('th_currency')}</th><th class="right">${t('th_opening')}</th><th class="right">${t('th_income')}</th><th class="right">${t('th_expense')}</th><th class="right">${t('th_closing')}</th></tr></thead><tbody>${rows}</tbody></table>
+        ${canEditBalances() ? `<div style="margin-top:12px;"><button class="btn ghost small" id="editOpeningBtn">${t('edit_opening_btn')}</button></div>` : ''}`;
+      if(canEditBalances()){
+        box.querySelector('#editOpeningBtn').onclick = ()=>{ openingEditMode = true; draw(); };
+      }
+    } else {
+      const inputs = LEDGER_CURRENCIES.map(c=> `<div class="denom-box"><div class="d">${c}</div><input type="number" min="0" step="0.01" data-cur="${c}" class="opening-input" value="${ledger.opening[c]||0}"></div>`).join('');
+      box.innerHTML = `<div class="amt-grid">${inputs}</div>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <button class="btn" id="saveOpeningBtn">${t('save_opening_btn')}</button>
+          <button class="btn ghost" id="cancelOpeningBtn">${t('cancel_btn')}</button>
+        </div>`;
+      box.querySelector('#saveOpeningBtn').onclick = async ()=>{
+        box.querySelectorAll('.opening-input').forEach(inp=>{ ledger.opening[inp.dataset.cur] = parseFloat(inp.value)||0; });
+        await saveState();
+        openingEditMode = false;
+        showToast(t('toast_opening_saved'));
+        render();
+      };
+      box.querySelector('#cancelOpeningBtn').onclick = ()=>{ openingEditMode = false; draw(); };
+    }
+  }
+  draw();
+}
+function renderLedgerForm(el, cashboxId){
+  if(dayIsClosed()){ el.innerHTML = `<div class="empty">${t('day_closed_msg')}</div>`; return; }
+  if(!ledgerDraft) ledgerDraft = { type:'income', note:'', amounts:{} };
+  const amtBoxes = LEDGER_CURRENCIES.map(c=>{
+    const v = ledgerDraft.amounts[c]||'';
+    return `<div class="denom-box"><div class="d">${c}</div><input type="number" min="0" step="0.01" data-cur="${c}" class="ledger-amt-input" value="${v}" placeholder="0"></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="form-row">
+      <div class="field"><label>${t('type_label')}</label>
+        <select id="ledgerType">
+          <option value="income" ${ledgerDraft.type==='income'?'selected':''}>${t('type_income')}</option>
+          <option value="expense" ${ledgerDraft.type==='expense'?'selected':''}>${t('type_expense')}</option>
+        </select></div>
+      <div class="field"><label>${t('note_label')}</label><input type="text" id="ledgerNote" value="${ledgerDraft.note}" placeholder="${t('note_placeholder')}"></div>
+    </div>
+    <label style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--brass);margin-bottom:6px;">${t('amount_label')}</label>
+    <div class="amt-grid">${amtBoxes}</div>
+    <button class="btn" id="addLedgerBtn">${t('add_btn')}</button>
+  `;
+  document.querySelectorAll('.ledger-amt-input').forEach(inp=>{
+    inp.oninput = ()=>{ ledgerDraft.amounts[inp.dataset.cur] = parseFloat(inp.value)||0; };
+  });
+  // Read type & note directly from the DOM at submit time — avoids any stale-state desync.
+  document.getElementById('addLedgerBtn').onclick = ()=>{
+    ledgerDraft.type = document.getElementById('ledgerType').value;
+    ledgerDraft.note = document.getElementById('ledgerNote').value;
+    addLedgerEntry(cashboxId);
+  };
+}
+async function addLedgerEntry(cashboxId){
+  const hasAmt = Object.values(ledgerDraft.amounts).some(v=>v>0);
+  if(!hasAmt){ showToast(t('toast_amt_needed')); return; }
+  const ledger = ledgerFor(cashboxId);
+  ledger.entries.push({ id:'LE-'+Date.now(), type:ledgerDraft.type, note:ledgerDraft.note,
+    amounts:{...ledgerDraft.amounts}, ts:nowTs(), by:CURRENT_USER.name, day:STATE.businessDay.date });
+  await saveState();
+  ledgerDraft = null;
+  showToast(t('toast_op_added'));
+  render();
+}
+
+/* ================= REQUESTS ================= */
+function renderRequests(el){
+  const isKassir = CURRENT_USER.role==='kassir';
+  el.insertAdjacentHTML('beforeend', `<div class="topline"><div><h2>${t('requests_title')}</h2><p class="sub">${isKassir?t('requests_sub_kassir'):t('requests_sub_mgr')}</p></div></div>`);
+  if(isKassir){
+    el.insertAdjacentHTML('beforeend', `<div class="panel"><div class="panel-head"><h3>${t('new_request_title')}</h3></div><div id="newReqForm"></div></div>`);
+    renderNewRequestForm(document.getElementById('newReqForm'));
+  }
+  const canManage = !isKassir;
+  if(canManage && editingReqId){
+    const req = STATE.requests.find(r=>r.id===editingReqId);
+    if(req){
+      el.insertAdjacentHTML('beforeend', `<div class="panel" style="border-color:var(--brass);"><div class="panel-head"><h3>✏️ ${t('edit_request_title')} ${req.id}</h3></div><div id="editReqForm"></div></div>`);
+      renderEditRequestForm(document.getElementById('editReqForm'), req);
+    } else { editingReqId = null; editReqDraft = null; }
+  }
+  const list = STATE.requests.filter(r=> !isKassir || r.cashbox===CURRENT_USER.cashbox).slice().reverse();
+  el.insertAdjacentHTML('beforeend', `
+    <div class="panel">
+      <div class="panel-head"><h3>${t('history_title')}</h3><div class="actions"><span class="tag approved">${list.length}</span>
+        <button class="btn ghost small" id="exportReqBtn">${t('export_excel')}</button></div></div>
+      ${list.length ? renderRequestsTable(list, canManage) : `<div class="empty">${t('no_ops')}</div>`}
+    </div>
+  `);
+  document.getElementById('exportReqBtn').onclick = ()=>{
+    const rows = list.map(r=>({
+      [t('th_no')]: r.trNumber||r.id, [t('th_cashbox')]: cashboxLabel(r.cashbox),
+      [t('th_action')]: r.direction==='from_mahzan'?t('dir_from_mahzan'):t('dir_to_mahzan'),
+      [t('th_currency')]: curLabel(r.currency),
+      [t('th_denoms')]: r.items.filter(i=>i.count>0).map(i=>`${i.count}x${i.denom}`).join(', '),
+      [t('th_sum')]: r.total, [t('th_who')]: r.createdBy, [t('th_time')]: r.createdTs
+    }));
+    exportSimpleStyled(`Дархостхо_${STATE.businessDay.date}.xlsx`, t('requests_title'), rows);
+  };
+  wireRequestButtons();
+}
+function wireRequestButtons(){
+  document.querySelectorAll('[data-editreq]').forEach(b=> b.onclick=()=>{ editingReqId=b.dataset.editreq; editReqDraft=null; render(); });
+}
+function renderRequestsTable(list, showEdit){
+  const rows = list.map(r=>{
+    const dirLabel = r.direction==='from_mahzan' ? t('dir_from_mahzan') : t('dir_to_mahzan');
+    const itemsStr = r.items.filter(i=>i.count>0).map(i=> `${i.count}×${fmt(parseFloat(i.denom))}`).join(', ');
+    const editedNote = r.editedBy ? `<div class="muted" style="font-size:11px;margin-top:3px;">✏️ ${r.editedBy}</div>` : '';
+    return `<tr>
+      <td class="mono muted">${r.trNumber||r.id}</td><td>${cashboxLabel(r.cashbox)}</td><td>${dirLabel}</td><td>${curLabel(r.currency)}</td>
+      <td class="num">${itemsStr}${editedNote}</td><td class="num right">${fmtMoney(r.total, r.currency)}</td>
+      <td><span class="tag approved">${t('self_confirmed')}</span><div class="muted" style="font-size:11px;margin-top:3px;">${r.createdBy}</div></td>
+      <td>${showEdit ? `<button class="btn small ghost" data-editreq="${r.id}">${t('edit_op_btn')}</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr><th>${t('th_no')}</th><th>${t('th_cashbox')}</th><th>${t('th_action')}</th><th>${t('th_currency')}</th><th>${t('th_denoms')}</th><th class="right">${t('th_sum')}</th><th>${t('th_status')}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderNewRequestForm(el){
+  if(dayIsClosed()){ el.innerHTML = `<div class="empty">${t('day_closed_req_msg')}</div>`; return; }
+  if(!reqDraft) reqDraft = { direction:'from_mahzan', currency:'TJS', items:{} };
+  const cur = reqDraft.currency;
+  const denomBoxes = CURRENCIES[cur].denoms.map(d=>{
+    const v = reqDraft.items[d]||0;
+    return `<div class="denom-box"><div class="d">${fmt(d)}</div><input type="number" min="0" data-denom="${d}" class="req-denom-input" value="${v||''}" placeholder="0"></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="form-row">
+      <div class="field"><label>${t('direction_label')}</label>
+        <select id="reqDirection">
+          <option value="from_mahzan" ${reqDraft.direction==='from_mahzan'?'selected':''}>${t('dir_from_mahzan')}</option>
+          <option value="to_mahzan" ${reqDraft.direction==='to_mahzan'?'selected':''}>${t('dir_to_mahzan')}</option>
+        </select></div>
+      <div class="field"><label>${t('currency_label')}</label>
+        <select id="reqCurrency">${Object.keys(CURRENCIES).map(c=>`<option value="${c}" ${c===cur?'selected':''}>${curLabel(c)}</option>`).join('')}</select></div>
+    </div>
+    <label style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--brass);margin-bottom:6px;">${t('denoms_count_label')}</label>
+    <div class="denom-grid">${denomBoxes}</div>
+    <div class="req-total">${t('total_label')}: <b id="reqTotal">0</b></div>
+    <button class="btn" style="margin-top:14px;" id="submitReqBtn">${t('confirm_execute_btn')}</button>
+    <p class="muted" style="font-size:12px;margin-top:10px;">${t('confirm_note')}</p>
+  `;
+  document.getElementById('reqDirection').onchange = e=>{ reqDraft.direction=e.target.value; };
+  document.getElementById('reqCurrency').onchange = e=>{ reqDraft.currency=e.target.value; reqDraft.items={}; renderNewRequestForm(el); };
+  document.querySelectorAll('.req-denom-input').forEach(inp=>{
+    inp.oninput = ()=>{ reqDraft.items[inp.dataset.denom] = Math.max(0, parseInt(inp.value)||0); updateReqTotal(); };
+  });
+  updateReqTotal();
+  document.getElementById('submitReqBtn').onclick = submitRequest;
+}
+function updateReqTotal(){
+  const cur = reqDraft.currency; let total = 0;
+  Object.entries(reqDraft.items).forEach(([d,c])=> total += parseFloat(d)*c);
+  const el = document.getElementById('reqTotal'); if(el) el.textContent = fmtMoney(total, cur);
+}
+async function submitRequest(){
+  const items = Object.entries(reqDraft.items).filter(([d,c])=>c>0).map(([denom,count])=>({denom,count}));
+  if(items.length===0){ showToast(t('toast_denom_needed')); return; }
+  const total = items.reduce((s,i)=> s+ parseFloat(i.denom)*i.count, 0);
+  const loc = CURRENT_USER.cashbox;
+  const direction = reqDraft.direction, currency = reqDraft.currency;
+  applyTransfer(loc, currency, direction, items, 1);
+  const trNumber = nextTrNumber();
+  const req = { id:'REQ-'+Date.now(), cashbox:loc, direction, currency, items, total, status:'approved',
+    createdBy:CURRENT_USER.name, createdTs:nowTs(), decidedBy:CURRENT_USER.name, decidedTs:nowTs(), trNumber };
+  STATE.requests.push(req);
+  STATE.journal.push({ id:'J-'+Date.now(), trNumber, ts:nowTs(), type:'transfer', cashbox:loc, direction, currency, items, total,
+    by:CURRENT_USER.name, device:navigator.userAgent.slice(0,40), day:STATE.businessDay.date, reqId:req.id });
+  await saveState();
+  reqDraft = null;
+  showToast(t('toast_op_executed'));
+  render();
+}
+function applyTransfer(loc, currency, direction, items, sign){
+  for(const it of items){
+    const d = it.denom, c = it.count * sign;
+    if(direction==='from_mahzan'){
+      STATE.balances['mahzan'][currency][d] = (STATE.balances['mahzan'][currency][d]||0) - c;
+      STATE.balances[loc][currency][d] = (STATE.balances[loc][currency][d]||0) + c;
+    } else {
+      STATE.balances[loc][currency][d] = (STATE.balances[loc][currency][d]||0) - c;
+      STATE.balances['mahzan'][currency][d] = (STATE.balances['mahzan'][currency][d]||0) + c;
+    }
+  }
+}
+function renderEditRequestForm(el, req){
+  if(!editReqDraft){ editReqDraft = {}; req.items.forEach(i=> editReqDraft[i.denom] = i.count); }
+  const cur = req.currency;
+  const origSummary = req.items.filter(i=>i.count>0).map(i=> `${i.count}×${fmt(parseFloat(i.denom))}`).join(', ') || '—';
+  const denomBoxes = CURRENCIES[cur].denoms.map(d=>{
+    const v = editReqDraft[d]||0;
+    return `<div class="denom-box"><div class="d">${fmt(d)}</div><input type="number" min="0" data-denom="${d}" class="edit-req-denom-input" value="${v||''}" placeholder="0"></div>`;
+  }).join('');
+  el.innerHTML = `
+    <p class="muted" style="font-size:13px;line-height:1.6;">
+      ${t('th_cashbox')}: <b style="color:var(--ivory);">${cashboxLabel(req.cashbox)}</b> ·
+      ${req.direction==='from_mahzan'?t('dir_from_mahzan'):t('dir_to_mahzan')} · ${t('currency_label')}: ${curLabel(cur)}<br>
+      ${t('original_op_label')} <span class="mono">${origSummary}</span></p>
+    <label style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--brass);margin:12px 0 6px;">${t('new_denoms_label')}</label>
+    <div class="denom-grid">${denomBoxes}</div>
+    <div class="req-total">${t('new_total_label')}: <b id="editReqTotal">0</b></div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn" id="saveEditReqBtn">${t('save_change_btn')}</button>
+      <button class="btn ghost" id="cancelEditReqBtn">${t('cancel_btn')}</button>
+    </div>`;
+  document.querySelectorAll('.edit-req-denom-input').forEach(inp=>{
+    inp.oninput = ()=>{ editReqDraft[inp.dataset.denom] = Math.max(0, parseInt(inp.value)||0); updateEditReqTotal(cur); };
+  });
+  updateEditReqTotal(cur);
+  document.getElementById('saveEditReqBtn').onclick = ()=> saveEditedRequest(req);
+  document.getElementById('cancelEditReqBtn').onclick = ()=>{ editingReqId=null; editReqDraft=null; render(); };
+}
+function updateEditReqTotal(cur){
+  let total = 0; Object.entries(editReqDraft).forEach(([d,c])=> total += parseFloat(d)*c);
+  const el = document.getElementById('editReqTotal'); if(el) el.textContent = fmtMoney(total, cur);
+}
+async function saveEditedRequest(req){
+  const items = Object.entries(editReqDraft).filter(([d,c])=>c>0).map(([denom,count])=>({denom,count}));
+  if(items.length===0){ showToast(t('toast_denom_needed')); return; }
+  const newTotal = items.reduce((s,i)=> s + parseFloat(i.denom)*i.count, 0);
+  const oldSummary = req.items.filter(i=>i.count>0).map(i=> `${i.count}×${fmt(parseFloat(i.denom))}`).join(', ');
+  const newSummary = items.map(i=> `${i.count}×${fmt(parseFloat(i.denom))}`).join(', ');
+  applyTransfer(req.cashbox, req.currency, req.direction, req.items, -1);
+  applyTransfer(req.cashbox, req.currency, req.direction, items, 1);
+  req.items = items; req.total = newTotal; req.editedBy = CURRENT_USER.name; req.editedTs = nowTs();
+  const j = STATE.journal.find(j=> j.reqId===req.id);
+  if(j){ j.items = items; j.total = newTotal; j.editedBy = CURRENT_USER.name; }
+  STATE.journal.push({ id:'AUD-'+Date.now(), trNumber:null, ts:nowTs(), type:'audit_edit', location:req.cashbox,
+    note:`Correction of ${req.trNumber||req.id} by ${CURRENT_USER.name}: "${oldSummary}" -> "${newSummary}"`,
+    by:CURRENT_USER.name, device:navigator.userAgent.slice(0,40) });
+  await saveState();
+  editingReqId = null; editReqDraft = null;
+  showToast(t('toast_op_edited'));
+  render();
+}
+
+/* ================= JOURNAL ================= */
+function renderJournal(el){
+  const isKassir = CURRENT_USER.role==='kassir';
+  const list = STATE.journal.filter(j=> j.type==='transfer' && (!isKassir || j.cashbox===CURRENT_USER.cashbox)).slice().reverse();
+  el.insertAdjacentHTML('beforeend', `
+    <div class="topline"><div><h2>${t('journal_title')}</h2><p class="sub">${t('journal_sub')}</p></div></div>
+    <div class="panel"><div class="panel-head"><h3>${t('journal_title')}</h3><button class="btn ghost small" id="exportJournalBtn">${t('export_excel')}</button></div>
+    ${list.length ? renderJournalTable(list) : `<div class="empty">${t('no_ops')}</div>`}</div>
+  `);
+  document.getElementById('exportJournalBtn').onclick = ()=>{
+    const rows = list.map(j=>({
+      [t('th_trnum')]: j.trNumber||'', [t('th_time')]: j.ts, [t('th_cashbox')]: cashboxLabel(j.cashbox),
+      [t('th_action')]: j.direction==='from_mahzan'?t('dir_from_mahzan'):t('dir_to_mahzan'),
+      [t('th_currency')]: curLabel(j.currency),
+      [t('th_denoms')]: j.items.map(i=>`${i.count}x${i.denom}`).join(', '),
+      [t('th_sum')]: j.total, [t('th_who')]: j.by
+    }));
+    exportSimpleStyled(`Журнал_${STATE.businessDay.date}.xlsx`, t('journal_title'), rows);
+  };
+}
+function renderJournalTable(list){
+  const rows = list.map(j=>{
+    const dirLabel = j.direction==='from_mahzan' ? t('dir_from_mahzan') : t('dir_to_mahzan');
+    const itemsStr = j.items.map(i=> `${i.count}×${fmt(parseFloat(i.denom))}`).join(', ');
+    return `<tr><td class="mono" style="color:var(--brass-bright);">${j.trNumber||'—'}</td>
+      <td class="muted" style="font-size:12px;">${j.ts}</td><td>${cashboxLabel(j.cashbox)}</td><td>${dirLabel}</td>
+      <td>${curLabel(j.currency)}</td><td class="num">${itemsStr}</td><td class="num right">${fmtMoney(j.total, j.currency)}</td>
+      <td class="muted" style="font-size:12px;">${j.by}${j.editedBy?('<br>✏️ '+j.editedBy):''}</td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>${t('th_trnum')}</th><th>${t('th_time')}</th><th>${t('th_cashbox')}</th><th>${t('th_action')}</th><th>${t('th_currency')}</th><th>${t('th_denoms')}</th><th class="right">${t('th_sum')}</th><th>${t('th_who')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ================= REPORTS ================= */
+let reportCashboxFilter = 'all';
+function renderReports(el){
+  el.insertAdjacentHTML('beforeend', `<div class="topline"><div><h2>${t('reports_title')}</h2><p class="sub">${t('reports_sub')} ${STATE.businessDay.date}</p></div></div>`);
+  const grid1 = document.createElement('div'); grid1.className='grid cols-3';
+  Object.keys(CURRENCIES).forEach(cur=> grid1.appendChild(makeStat(`${t('mahzan_balance_prefix')} ${curLabel(cur)}`, fmtMoney(sumBalance('mahzan',cur),cur))));
+  el.appendChild(grid1);
+
+  const kassaTotalsHtml = document.createElement('div'); kassaTotalsHtml.className='panel';
+  let rows = '';
+  Object.keys(STATE.cashboxes).forEach(k=>{
+    const cells = Object.keys(CURRENCIES).map(cur=>`<td class="num right">${fmtMoney(sumBalance(k,cur),cur)}</td>`).join('');
+    rows += `<tr><td>${cashboxLabel(k)}</td>${cells}</tr>`;
+  });
+  kassaTotalsHtml.innerHTML = `<div class="panel-head"><h3>${t('all_kassa_balance_title')}</h3></div>
+    <table><thead><tr><th>${t('th_cashbox')}</th>${Object.keys(CURRENCIES).map(c=>`<th class="right">${curLabel(c)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+  el.appendChild(kassaTotalsHtml);
+
+  const today = STATE.businessDay.date;
+  const todayJ = STATE.journal.filter(j=>j.type==='transfer' && j.day===today);
+  const given = todayJ.filter(j=>j.direction==='from_mahzan');
+  const received = todayJ.filter(j=>j.direction==='to_mahzan');
+  const sumByCur = (arr)=>{ const m={}; arr.forEach(j=> m[j.currency]=(m[j.currency]||0)+j.total); return Object.entries(m).map(([c,v])=>fmtMoney(v,c)).join(' · ') || '—'; };
+  const grid2 = document.createElement('div'); grid2.className='grid cols-2';
+  grid2.innerHTML = `
+    <div class="card stat-card"><div class="label">${t('received_today_title')}</div><div class="value" style="font-size:17px;">${sumByCur(given)}</div><div class="foot">${given.length} ${t('ops_suffix')}</div></div>
+    <div class="card stat-card"><div class="label">${t('given_today_title')}</div><div class="value" style="font-size:17px;">${sumByCur(received)}</div><div class="foot">${received.length} ${t('ops_suffix')}</div></div>`;
+  el.appendChild(grid2);
+
+  const ledgerPanel = document.createElement('div'); ledgerPanel.className='panel';
+  let ledgerRows = '';
+  Object.keys(STATE.cashboxes).forEach(k=>{
+    const ledger = ledgerFor(k);
+    const todays = ledger.entries.filter(e=>e.day===today);
+    const inc = todays.filter(e=>e.type==='income'), exp = todays.filter(e=>e.type==='expense');
+    LEDGER_CURRENCIES.forEach(c=>{
+      const incSum = inc.reduce((s,e)=>s+(e.amounts[c]||0),0), expSum = exp.reduce((s,e)=>s+(e.amounts[c]||0),0);
+      if(incSum===0 && expSum===0) return;
+      const opening = ledger.opening[c]||0;
+      ledgerRows += `<tr><td>${cashboxLabel(k)}</td><td>${c}</td><td class="right num" style="color:var(--green);">${fmt(incSum)}</td><td class="right num" style="color:var(--red);">${fmt(expSum)}</td><td class="right num" style="color:var(--brass-bright);font-weight:600;">${fmt(opening+incSum-expSum)}</td></tr>`;
+    });
+  });
+  ledgerPanel.innerHTML = `<div class="panel-head"><h3>${t('ledger_summary_title')}</h3></div>
+    ${ledgerRows ? `<table><thead><tr><th>${t('th_cashbox')}</th><th>${t('th_currency')}</th><th class="right">${t('th_income')}</th><th class="right">${t('th_expense')}</th><th class="right">${t('th_closing')}</th></tr></thead><tbody>${ledgerRows}</tbody></table>` : `<div class="empty">${t('no_ledger_today')}</div>`}`;
+  el.appendChild(ledgerPanel);
+
+  const denomPanel = document.createElement('div'); denomPanel.className='panel';
+  denomPanel.innerHTML = `
+    <div class="panel-head"><h3>${t('denom_breakdown_title')}</h3>
+      <div class="actions">
+        <select class="small" id="reportCashboxFilter">
+          <option value="all" ${reportCashboxFilter==='all'?'selected':''}>${t('all_kassas_option')}</option>
+          ${Object.keys(STATE.cashboxes).map(k=>`<option value="${k}" ${reportCashboxFilter===k?'selected':''}>${cashboxLabel(k)}</option>`).join('')}
+        </select>
+        <button class="btn ghost small" id="exportDenomBtn">${t('export_excel')}</button>
+      </div></div>
+    <div id="denomBreakdownBody"></div>`;
+  el.appendChild(denomPanel);
+  document.getElementById('reportCashboxFilter').onchange = e=>{ reportCashboxFilter = e.target.value; renderDenomBreakdown(); };
+  document.getElementById('exportDenomBtn').onclick = exportDenomBreakdown;
+  renderDenomBreakdown();
+}
+function computeDenomBreakdown(){
+  const today = STATE.businessDay.date;
+  const filtered = STATE.journal.filter(j=> j.type==='transfer' && j.day===today && (reportCashboxFilter==='all' || j.cashbox===reportCashboxFilter));
+  const out = {};
+  Object.keys(CURRENCIES).forEach(cur=>{
+    const received = {}, given = {};
+    filtered.filter(j=>j.currency===cur).forEach(j=>{
+      const target = j.direction==='from_mahzan' ? received : given;
+      j.items.forEach(it=> target[it.denom] = (target[it.denom]||0) + it.count);
+    });
+    out[cur] = {received, given};
+  });
+  return out;
+}
+function renderDenomBreakdown(){
+  const body = document.getElementById('denomBreakdownBody');
+  if(!body) return;
+  const data = computeDenomBreakdown();
+  let html = '';
+  Object.keys(CURRENCIES).forEach(cur=>{
+    const {received, given} = data[cur];
+    const denomsUsed = new Set([...Object.keys(received), ...Object.keys(given)]);
+    if(denomsUsed.size===0) return;
+    const rows = CURRENCIES[cur].denoms.filter(d=> denomsUsed.has(String(d))).map(d=>{
+      const r = received[d]||0, g = given[d]||0;
+      return `<tr><td class="num">${fmt(d)}</td><td class="right num" style="color:var(--green);">${r||'—'}</td><td class="right num" style="color:var(--red);">${g||'—'}</td></tr>`;
+    }).join('');
+    html += `<h3 style="font-size:14px;color:var(--brass-bright);margin:16px 0 8px;">${curLabel(cur)}</h3>
+      <table><thead><tr><th>${t('th_denom')}</th><th class="right">${t('received_count_th')}</th><th class="right">${t('given_count_th')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  });
+  body.innerHTML = html || `<div class="empty">${t('no_ops_filter')}</div>`;
+}
+function exportDenomBreakdown(){
+  const data = computeDenomBreakdown();
+  const sheets = {};
+  Object.keys(CURRENCIES).forEach(cur=>{
+    const {received, given} = data[cur];
+    const denomsUsed = new Set([...Object.keys(received), ...Object.keys(given)]);
+    if(denomsUsed.size===0) return;
+    const rows = CURRENCIES[cur].denoms.filter(d=> denomsUsed.has(String(d))).map(d=>({
+      [t('th_denom')]: d, [t('received_count_th')]: received[d]||0, [t('given_count_th')]: given[d]||0
+    }));
+    sheets[cur] = rows;
+  });
+  if(Object.keys(sheets).length===0){ showToast(t('no_ops_filter')); return; }
+  exportMultiSheetStyled(`Купюрахо_${STATE.businessDay.date}.xlsx`, sheets);
+}
+function makeStat(label,value){
+  const d = document.createElement('div'); d.className='card stat-card';
+  d.innerHTML = `<div class="label">${label}</div><div class="value" style="font-size:19px;">${value}</div>`;
+  return d;
+}
+
+/* ================= USERS & CASHBOXES ================= */
+function renderUsers(el){
+  el.insertAdjacentHTML('beforeend', `<div class="topline"><div><h2>${t('users_title')}</h2><p class="sub">${t('users_sub')}</p></div></div>`);
+  const usersPanel = document.createElement('div'); usersPanel.className='panel';
+  let rows = Object.entries(STATE.users).map(([k,u])=>`
+    <tr><td class="mono">${k}</td><td>${userDisplayName(k,u)}</td><td>${roleLabel(u.role)}</td><td>${u.cashbox?cashboxLabel(u.cashbox):'—'}</td>
+      <td><div class="pw-row"><input type="text" placeholder="${t('pw_placeholder')}" id="pw_${k}"><button class="btn small" data-setpw="${k}">${t('pw_save_btn')}</button></div></td></tr>`).join('');
+  usersPanel.innerHTML = `<div class="panel-head"><h3>${t('users_list_title')}</h3></div>
+    <table><thead><tr><th>${t('th_login')}</th><th>${t('th_name')}</th><th>${t('th_role')}</th><th>${t('th_cashbox')}</th><th>${t('th_pw_change')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  el.appendChild(usersPanel);
+
+  const cbPanel = document.createElement('div'); cbPanel.className='panel';
+  let cbRows = Object.entries(STATE.cashboxes).map(([k])=>{
+    if(editingCbId===k){
+      return `<tr><td colspan="3">
+        <div class="form-row" style="margin:0;">
+          <div class="field"><label>ID</label><input type="text" id="editCbIdInput" value="${k}"></div>
+          <div class="field"><label>${t('th_name')}</label><input type="text" id="editCbLabelInput" value="${cashboxLabel(k)}"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn small" id="saveCbEditBtn">${t('save_btn')}</button>
+          <button class="btn ghost small" id="cancelCbEditBtn">${t('cancel_btn')}</button>
+        </div>
+      </td></tr>`;
+    }
+    return `<tr><td class="mono">${k}</td><td>${cashboxLabel(k)}</td><td>
+      <button class="icon-btn" data-editcb="${k}" title="Edit">✏️</button>
+      <button class="icon-btn" data-delcb="${k}" title="Delete">🗑</button></td></tr>`;
+  }).join('');
+  cbPanel.innerHTML = `
+    <div class="panel-head"><h3>${t('cashboxes_title')}</h3></div>
+    <table><thead><tr><th>ID</th><th>${t('th_name')}</th><th></th></tr></thead><tbody>${cbRows}</tbody></table>
+    <div class="form-row" style="margin-top:16px;">
+      <div class="field"><label>${t('new_cashbox_label')}</label><input type="text" id="newCbLabel" placeholder="Касса №4"></div>
+      <div class="field"><label>ID (лотинӣ, ихтиёрӣ)</label><input type="text" id="newCbId" placeholder="kassa4"></div>
+    </div>
+    <button class="btn" id="addCbBtn">${t('add_cashbox_btn')}</button>`;
+  el.appendChild(cbPanel);
+
+  if(editingCbId){
+    document.getElementById('saveCbEditBtn').onclick = async ()=>{
+      const oldId = editingCbId;
+      let newId = document.getElementById('editCbIdInput').value.trim().replace(/\s+/g,'_');
+      const newLabel = document.getElementById('editCbLabelInput').value.trim();
+      if(!newId || !newLabel){ showToast(t('toast_cb_needed')); return; }
+      if(newId !== oldId && STATE.cashboxes[newId]){ showToast('ID аллакай истифода мешавад / ID уже используется'); return; }
+      renameCashbox(oldId, newId, newLabel);
+      await saveState();
+      editingCbId = null;
+      showToast(t('toast_pw_changed'));
+      render();
+    };
+    document.getElementById('cancelCbEditBtn').onclick = ()=>{ editingCbId = null; render(); };
+  }
+  document.querySelectorAll('[data-editcb]').forEach(b=>{
+    b.onclick = ()=>{ editingCbId = b.dataset.editcb; render(); };
+  });
+
+  document.querySelectorAll('[data-setpw]').forEach(b=>{
+    b.onclick = async ()=>{
+      const key = b.dataset.setpw, input = document.getElementById('pw_'+key), val = input.value.trim();
+      if(!val){ showToast(t('toast_pw_needed')); return; }
+      STATE.users[key].password = val;
+      await saveState();
+      showToast(t('toast_pw_changed'));
+      input.value='';
+    };
+  });
+  document.querySelectorAll('[data-delcb]').forEach(b=>{
+    b.onclick = async ()=>{
+      const id = b.dataset.delcb;
+      if(!confirm(t('delete_cb_confirm'))) return;
+      delete STATE.cashboxes[id]; delete STATE.balances[id]; delete STATE.cashLedger[id];
+      Object.keys(STATE.users).forEach(uk=>{ if(STATE.users[uk].cashbox===id) delete STATE.users[uk]; });
+      if(selectedKassaView===id) selectedKassaView = Object.keys(STATE.cashboxes)[0] || null;
+      await saveState(); showToast(t('toast_cb_deleted')); render();
+    };
+  });
+  document.getElementById('addCbBtn').onclick = async ()=>{
+    const label = document.getElementById('newCbLabel').value.trim();
+    let id = document.getElementById('newCbId').value.trim().replace(/\s+/g,'_');
+    if(!label){ showToast(t('toast_cb_needed')); return; }
+    if(!id) id = 'kassa_' + Date.now().toString(36);
+    if(STATE.cashboxes[id]){ showToast('ID аллакай истифода мешавад / ID уже используется'); return; }
+    STATE.cashboxes[id] = { label };
+    STATE.balances[id] = {};
+    Object.keys(CURRENCIES).forEach(cur=>{ STATE.balances[id][cur] = {}; CURRENCIES[cur].denoms.forEach(d=> STATE.balances[id][cur][d]=0); });
+    STATE.cashLedger[id] = { opening:{}, entries:[] };
+    STATE.users[id] = { name:'Кассир — '+label, role:'kassir', cashbox:id, password:'kassa123' };
+    await saveState();
+    showToast(t('toast_cb_added')+' Логин: '+id+' / kassa123');
+    render();
+  };
+}
+
+function renameCashbox(oldId, newId, newLabel){
+  if(newId === oldId){
+    STATE.cashboxes[oldId].label = newLabel;
+    return;
+  }
+  STATE.cashboxes[newId] = { label:newLabel };
+  STATE.balances[newId] = STATE.balances[oldId];
+  STATE.cashLedger[newId] = STATE.cashLedger[oldId];
+  delete STATE.cashboxes[oldId]; delete STATE.balances[oldId]; delete STATE.cashLedger[oldId];
+
+  // move the associated kassir user to the new key so login stays in sync
+  const userEntry = Object.entries(STATE.users).find(([,u])=> u.cashbox===oldId);
+  if(userEntry){
+    const [oldUserKey, u] = userEntry;
+    u.cashbox = newId;
+    if(oldUserKey === oldId){
+      STATE.users[newId] = u;
+      delete STATE.users[oldUserKey];
+    }
+  }
+  // re-point historical records so nothing gets orphaned
+  STATE.requests.forEach(r=>{ if(r.cashbox===oldId) r.cashbox = newId; });
+  STATE.journal.forEach(j=>{ if(j.cashbox===oldId) j.cashbox = newId; if(j.location===oldId) j.location = newId; });
+  if(selectedKassaView===oldId) selectedKassaView = newId;
+  if(CURRENT_USER && CURRENT_USER.cashbox===oldId) CURRENT_USER.cashbox = newId;
+}
+
+/* ================= SETTINGS ================= */
+function renderSettings(el){
+  el.insertAdjacentHTML('beforeend', `<div class="topline"><div><h2>${t('settings_title')}</h2><p class="sub">${t('settings_sub')}</p></div></div>`);
+  const closed = STATE.businessDay.closed;
+  const panel = document.createElement('div'); panel.className='panel';
+  panel.innerHTML = `
+    <div class="panel-head"><h3>${STATE.businessDay.date}</h3><span class="tag ${closed?'rejected':'approved'}">${closed?t('closed_tag'):t('open_tag')}</span></div>
+    <p class="muted" style="font-size:13.5px;line-height:1.6;">${t('biz_day_desc')}</p>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      ${!closed ? `<button class="btn" id="closeDayBtn">${t('close_day_btn')}</button>` : ''}
+      ${closed && CURRENT_USER.role==='admin' ? `<button class="btn ghost" id="reopenDayBtn">${t('reopen_day_btn')}</button>` : ''}
+      ${closed && CURRENT_USER.role==='admin' ? `<button class="btn" id="newDayBtn">${t('new_day_btn')}</button>` : ''}
+    </div>`;
+  el.appendChild(panel);
+  const btn1 = document.getElementById('closeDayBtn'); if(btn1) btn1.onclick = async ()=>{ STATE.businessDay.closed=true; await saveState(); showToast(t('toast_day_closed')); render(); };
+  const btn2 = document.getElementById('reopenDayBtn'); if(btn2) btn2.onclick = async ()=>{ STATE.businessDay.closed=false; await saveState(); showToast(t('toast_day_reopened')); render(); };
+  const btn3 = document.getElementById('newDayBtn'); if(btn3) btn3.onclick = async ()=>{ STATE.businessDay = {date: todayStr(), closed:false}; await saveState(); showToast(t('toast_new_day')); render(); };
+
+  const auditPanel = document.createElement('div'); auditPanel.className='panel';
+  const audits = STATE.journal.filter(j=>j.type==='audit_edit').slice().reverse().slice(0,20);
+  auditPanel.innerHTML = `<div class="panel-head"><h3>${t('audit_title')}</h3></div>
+    ${audits.length ? `<table><thead><tr><th>${t('th_when')}</th><th>${t('th_where')}</th><th>${t('th_desc')}</th><th>${t('th_who')}</th></tr></thead><tbody>
+      ${audits.map(a=>`<tr><td class="muted" style="font-size:12px;">${a.ts}</td><td>${a.location==='mahzan'?t('mahzan_title'):cashboxLabel(a.location)}</td><td>${a.note}</td><td>${a.by}</td></tr>`).join('')}
+    </tbody></table>` : `<div class="empty">${t('no_audit')}</div>`}`;
+  el.appendChild(auditPanel);
+}
+
+/* ================= INIT ================= */
+(async function init(){
+  await loadLang();
+  await loadState();
+  populateLoginUsers();
+  applyStaticTranslations();
+  document.getElementById('langTjLogin').onclick = ()=> setLang('tj');
+  document.getElementById('langRuLogin').onclick = ()=> setLang('ru');
+})();
+</script>
+</body>
+</html>
